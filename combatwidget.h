@@ -40,21 +40,21 @@ Q_OBJECT
 public:
     CombatWidget(const QString& directory, QWidget* parent = 0);
     ~CombatWidget();
-    const QString& getDirectory() const;
+    const QString& directory() const;
 
-    QStringList getFactions() const;
-    QStringList getGroups() const;
-    QStringList getFactionsForGroup(const QString& group) const;
-    QList<Unit*> getUnits() const;
-    QIcon getFlag(const QString& faction) const;
-    QPixmap getUnitIcon(const QString& faction, int unitID) const;
+    QStringList factions() const;
+    QStringList groups() const;
+    QStringList factionsForGroup(const QString& group) const;
+    QList<Unit*> units() const;
+    QIcon flag(const QString& faction) const;
+    QPixmap unitIcon(const QString& faction, int unitID) const;
 
     bool isLandBattle() const;
     bool isAmphibiousCombat() const;
     bool landUnitMustLive() const;
     OrderOfLoss orderOfLoss() const;
 
-    QString getNameForID(int id) const;
+    QString nameForID(int id) const;
 
 private slots:
     void switchCombatSides();

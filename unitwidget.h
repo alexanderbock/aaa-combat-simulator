@@ -38,8 +38,8 @@ Q_OBJECT
 public:
     UnitWidget(FactionWidget* parent, Unit* unit, const QPixmap& icon);
 
-    Unit* getWidgetUnit() const;
-    QPair<Unit*, int> getUnits() const;
+    Unit* widgetUnit() const;
+    QPair<Unit*, int> units() const;
     void setAmount(int amount);
 
 private:

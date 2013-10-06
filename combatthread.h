@@ -46,10 +46,10 @@ public:
 
     void run();
 
-    const Batallion& getAttacker() const;
-    const Batallion& getAttackerCasualities() const;
-    const Batallion& getDefender() const;
-    const Batallion& getDefenderCasualities() const;
+    const Batallion& attacker() const;
+    const Batallion& attackerCasualities() const;
+    const Batallion& defender() const;
+    const Batallion& defenderCasualities() const;
 
 private:
     void runLandBattle();

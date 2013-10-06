@@ -75,7 +75,7 @@ public:
 
     QList<QPair<Unit*, int> > getUnits() const;
     void setUnits(const QList<QPair<Unit*, int> >& units);
-    QString getFaction() const;
+    QString faction() const;
     void setFaction(const QString& faction);
     void clear();
 

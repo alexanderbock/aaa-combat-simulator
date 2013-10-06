@@ -53,14 +53,14 @@ SimulatorApplication::SimulatorApplication(int& argc, char** argv)
     QObject::connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(remoteVersionDownloadFailed(QNetworkReply::NetworkError)));
 
     // create the necessary directory structure (%USER%/triplea/combatsim/) if it doesn't already exist and set it as the current
-    QDir dir = getMapsDirectory();
+    QDir dir = mapsDirectory();
     dir.mkpath(".");
     QDir::setCurrent(dir.absolutePath());
 
     // create the widgets for the application
     _mainWidget->setMinimumSize(800, 640);
     foreach (const QString& dir, getListOfLocalMaps()) {
-        const QDir& mapsDir = getMapsDirectory(dir);
+        const QDir& mapsDir = mapsDirectory(dir);
         if (mapsDir.exists() && mapsDir.exists(dir + ".xml")) {
             addTab(dir);
         }
@@ -97,7 +97,7 @@ void SimulatorApplication::addTab(QString name) {
             _mainWidget->insertTab(i, widget, name);
             return; // if the widget is no CombatWidget, we have found the Settings Widget
         }
-        const QString& currentName = current->getDirectory();
+        const QString& currentName = current->directory();
         if (currentName.compare(name, Qt::CaseInsensitive) > 0) {
             _mainWidget->insertTab(i, widget, name);
             return;
@@ -105,7 +105,7 @@ void SimulatorApplication::addTab(QString name) {
     }
 
     // if we got until here, the tab must be added to the back and no Settings Widget exists yet
-    _mainWidget->addTab(widget, widget->getDirectory());
+    _mainWidget->addTab(widget, widget->directory());
 }
 
 void SimulatorApplication::removeTab(QString name) {
@@ -166,12 +166,12 @@ void SimulatorApplication::checkApplicationAndMapVersions() const {
 
     _remoteSettings->beginGroup("Maps");
     QList<MapVersionInformation> newMapList;
-    QDir mapsDir = getMapsDirectory();
+    QDir mapsDir = mapsDirectory();
     QStringList dirs = mapsDir.entryList();
     foreach (const QString& dirName, dirs) {
-        QDir dir(getMapsDirectory(dirName));
+        QDir dir(mapsDirectory(dirName));
         if (dir.exists("VERSION")) {
-            QString localVersion = getLocalMapVersion(dirName);
+            QString localVersion = localMapVersion(dirName);
             QString remoteVersion = _remoteSettings->value(dirName).toString();
             result = compareVersions(remoteVersion, localVersion);
             if (result > 0) {
@@ -204,15 +204,15 @@ void SimulatorApplication::checkApplicationAndMapVersions() const {
     }
 }
 
-QSettings* SimulatorApplication::getLocalSettings() const {
+QSettings* SimulatorApplication::localSettings() const {
     return _localSettings;
 }
 
-QSettings* SimulatorApplication::getRemoteSettings() const {
+QSettings* SimulatorApplication::remoteSettings() const {
     return _remoteSettings;
 }
 
-QNetworkAccessManager* SimulatorApplication::getNetworkAccessManager() const {
+QNetworkAccessManager* SimulatorApplication::networkAccessManager() const {
     return _networkManager;
 }
 
@@ -261,8 +261,8 @@ int SimulatorApplication::compareVersions(const QString& v1, const QString& v2) 
         return 0;
 }
 
-QString SimulatorApplication::getLocalMapVersion(const QString& map) const {
-    QString file = getMapsDirectory(map).absolutePath() + "/VERSION";
+QString SimulatorApplication::localMapVersion(const QString& map) const {
+    QString file = mapsDirectory(map).absolutePath() + "/VERSION";
     QFile versionFile(file);
     versionFile.open(QIODevice::ReadOnly);
     QTextStream stream(&versionFile);
@@ -271,12 +271,12 @@ QString SimulatorApplication::getLocalMapVersion(const QString& map) const {
 }
 
 QStringList SimulatorApplication::getListOfLocalMaps() const {
-    QDir current = getMapsDirectory();
+    QDir current = mapsDirectory();
     current.setFilter(QDir::Dirs);
     return current.entryList();
 }
 
-QDir SimulatorApplication::getMapsDirectory(const QString& subDir) const {
+QDir SimulatorApplication::mapsDirectory(const QString& subDir) const {
     return QDir(QDir::homePath() + "/triplea/combatsim/" + subDir + "/");
 }
 
@@ -296,18 +296,18 @@ QString SimulatorApplication::getChangelogUrlString() const {
     return "http://webstaff.itn.liu.se/~alebo68/TripleA/CHANGELOG";
 }
 
-QUrl SimulatorApplication::getRemoteMapIndexUrl(const QString& map) const {
-    return QUrl(getBaseUrlString() + map + "/INDEX");
+QUrl SimulatorApplication::remoteMapIndexURL(const QString& map) const {
+    return QUrl(baseURLString() + map + "/INDEX");
 }
 
-QString SimulatorApplication::getTemporaryIndexFileString() const {
+QString SimulatorApplication::temporaryIndexFileString() const {
     return QDir::tempPath() + "/INDEX";
 }
 
-QString SimulatorApplication::getBaseUrlString() const {
+QString SimulatorApplication::baseURLString() const {
     return "http://webstaff.itn.liu.se/~alebo68/TripleA/";
 }
 
-QString SimulatorApplication::getLocalMapVersionFileString(const QString& map) const {
-    return getMapsDirectory(map).absolutePath() + "/VERSION";
+QString SimulatorApplication::localMapVersionFileString(const QString& map) const {
+    return mapsDirectory(map).absolutePath() + "/VERSION";
 }

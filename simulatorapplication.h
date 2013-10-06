@@ -45,15 +45,15 @@ public:
     SimulatorApplication(int& argc, char** argv);
     ~SimulatorApplication();
 
-    QNetworkAccessManager* getNetworkAccessManager() const;
-    QSettings* getLocalSettings() const;
-    QSettings* getRemoteSettings() const;
-    QDir getMapsDirectory(const QString& subDir = ".") const;
-    QString getLocalMapVersion(const QString& map) const;
-    QString getLocalMapVersionFileString(const QString& map) const;
-    QUrl getRemoteMapIndexUrl(const QString& map) const;
-    QString getTemporaryIndexFileString() const;
-    QString getBaseUrlString() const;
+    QNetworkAccessManager* networkAccessManager() const;
+    QSettings* localSettings() const;
+    QSettings* remoteSettings() const;
+    QDir mapsDirectory(const QString& subDir = ".") const;
+    QString localMapVersion(const QString& map) const;
+    QString localMapVersionFileString(const QString& map) const;
+    QUrl remoteMapIndexURL(const QString& map) const;
+    QString temporaryIndexFileString() const;
+    QString baseURLString() const;
 
 public slots:
     void addTab(QString);

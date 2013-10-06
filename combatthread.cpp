@@ -108,7 +108,7 @@ inline int getNumberOfSupporters(const Batallion& bat) {
     int result = 0;
     for (int i = 0; i < bat.size(); ++i) {
         if (bat[i].isArtillery()) {
-            result += bat[i].getNumArtillery();
+            result += bat[i].numArtillery();
         }
     }
     return result;
@@ -395,18 +395,18 @@ void CombatThread::runSeaBattle() {
     }   
 }
 
-const Batallion& CombatThread::getAttacker() const {
+const Batallion& CombatThread::attacker() const {
     return _attacker;
 }
 
-const Batallion& CombatThread::getAttackerCasualities() const {
+const Batallion& CombatThread::attackerCasualities() const {
     return _attackerCasualities;
 }
 
-const Batallion& CombatThread::getDefender() const {
+const Batallion& CombatThread::defender() const {
     return _defender;
 }
 
-const Batallion& CombatThread::getDefenderCasualities() const {
+const Batallion& CombatThread::defenderCasualities() const {
     return _defenderCasualities;
 }

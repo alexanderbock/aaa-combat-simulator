@@ -146,14 +146,14 @@ FactionWidget::FactionWidget(CombatWidget* parent, const QString& title, Faction
 }
 
 void FactionWidget::initFactions() {
-    QStringList factions = _parent->getFactions();
+    QStringList factions = _parent->factions();
 
     foreach (const QString& faction, factions)
-        _factionBox->addItem(_parent->getFlag(faction), faction);
+        _factionBox->addItem(_parent->flag(faction), faction);
 
     _factionBox->insertSeparator(_factionBox->count());
 
-    QStringList groups = _parent->getGroups();
+    QStringList groups = _parent->groups();
     foreach (const QString& group, groups) {
         _factionBox->addItem(group);
     }
@@ -161,8 +161,8 @@ void FactionWidget::initFactions() {
 
 void FactionWidget::createUnits() {
     const QString& faction = _factionBox->currentText();
-    if (_parent->getGroups().contains(faction)) {
-        QStringList factions = _parent->getFactionsForGroup(faction);
+    if (_parent->groups().contains(faction)) {
+        QStringList factions = _parent->factionsForGroup(faction);
         foreach (const QString& f, factions)
             createUnits(f);
     }
@@ -171,17 +171,17 @@ void FactionWidget::createUnits() {
 }
 
 void FactionWidget::createUnits(const QString& faction) {
-    QList<Unit*> units = _parent->getUnits();
+    QList<Unit*> units = _parent->units();
 
     foreach (Unit* unit, units) {
-        QPixmap pm = _parent->getUnitIcon(faction, unit->getID());
+        QPixmap pm = _parent->unitIcon(faction, unit->id());
         if (pm.isNull())
             continue;
 
-        if ((_side == FactionSideAttacker) && (unit->getAttack() == 0) && !unit->canAttack())
+        if ((_side == FactionSideAttacker) && (unit->attackValue() == 0) && !unit->canAttack())
             continue;
 
-        if ((_side == FactionSideDefender) && (unit->getDefense() == 0))
+        if ((_side == FactionSideDefender) && (unit->defenseValue() == 0))
             continue;
 
         if (_parent->isLandBattle()) {
@@ -219,7 +219,7 @@ void FactionWidget::recreateUnits() {
 QList<QPair<Unit*, int> > FactionWidget::getUnits() const {
     QList<QPair<Unit*, int> > result;
     foreach (UnitWidget* unitWidget, _unitWidgets) {
-        QPair<Unit*, int> units = unitWidget->getUnits();
+        QPair<Unit*, int> units = unitWidget->units();
         if (units.second > 0)
             result.append(units);
     }
@@ -232,7 +232,7 @@ void FactionWidget::setUnits(const QList<QPair<Unit*, int> >& units) {
         Unit* u = p.first;
         int n = p.second;
         foreach (UnitWidget* w, _unitWidgets) {
-            if (w->getWidgetUnit() == u) {
+            if (w->widgetUnit() == u) {
                 w->setAmount(n);
                 break;
             }
@@ -247,7 +247,7 @@ void FactionWidget::clear() {
 }
 
 
-QString FactionWidget::getFaction() const {
+QString FactionWidget::faction() const {
     return _factionBox->currentText();
 }
 

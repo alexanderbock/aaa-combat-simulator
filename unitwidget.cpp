@@ -54,11 +54,11 @@ UnitWidget::UnitWidget(FactionWidget* parent, Unit* unit, const QPixmap& icon)
     setToolTip(unit->description());
 }
 
-QPair<Unit*, int> UnitWidget::getUnits() const {
+QPair<Unit*, int> UnitWidget::units() const {
     return QPair<Unit*, int>(_unit, _amount->value());
 }
 
-Unit* UnitWidget::getWidgetUnit() const {
+Unit* UnitWidget::widgetUnit() const {
     return _unit;
 }
 

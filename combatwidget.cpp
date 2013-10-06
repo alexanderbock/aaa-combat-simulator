@@ -139,33 +139,33 @@ void CombatWidget::initXML(const QString& xmlFile) {
     }
 }
 
-QStringList CombatWidget::getFactions() const {
+QStringList CombatWidget::factions() const {
     return _factions;
 }
 
-QStringList CombatWidget::getGroups() const {
+QStringList CombatWidget::groups() const {
     return _factionsDetail.keys();
 }
 
-QStringList CombatWidget::getFactionsForGroup(const QString& group) const {
+QStringList CombatWidget::factionsForGroup(const QString& group) const {
     return _factionsDetail.value(group);
 }
 
-QList<Unit*> CombatWidget::getUnits() const {
+QList<Unit*> CombatWidget::units() const {
     return _units;
 }
 
-QIcon CombatWidget::getFlag(const QString& faction) const {
+QIcon CombatWidget::flag(const QString& faction) const {
     return QIcon(_directory + "/" + faction + "/" + faction + ".png");
 }
 
-QPixmap CombatWidget::getUnitIcon(const QString& faction, int unitID) const {
-    QString unitName = getNameForID(unitID);
+QPixmap CombatWidget::unitIcon(const QString& faction, int unitID) const {
+    QString unitName = nameForID(unitID);
     return QPixmap(_directory + "/" + faction + "/" + unitName + ".png");
 }
 
-QString CombatWidget::getNameForID(int id) const {
-    return _idMap[id]->getName();
+QString CombatWidget::nameForID(int id) const {
+    return _idMap[id]->name();
 }
 
 bool CombatWidget::isLandBattle() const {
@@ -184,7 +184,7 @@ OrderOfLoss CombatWidget::orderOfLoss() const {
     return _controlWidget->orderOfLoss();
 }
 
-const QString& CombatWidget::getDirectory() const {
+const QString& CombatWidget::directory() const {
     return _directory;
 }
 
@@ -192,8 +192,8 @@ void CombatWidget::switchCombatSides() {
     QList<QPair<Unit*, int> > attackerUnits = _attackerWidget->getUnits();
     QList<QPair<Unit*, int> > defenderUnits = _defenderWidget->getUnits();
 
-    QString faction = _attackerWidget->getFaction();
-    _attackerWidget->setFaction(_defenderWidget->getFaction());
+    QString faction = _attackerWidget->faction();
+    _attackerWidget->setFaction(_defenderWidget->faction());
     _defenderWidget->setFaction(faction);
 
     _attackerWidget->setUnits(defenderUnits);
@@ -230,10 +230,10 @@ CombatWidget::CombatResult CombatWidget::computeCombatResults(const QList<Combat
     int averageDefenderIPCLoss = 0;
     int draw = 0;
     foreach (const CombatThread* result, results) {
-        const Batallion& attacker = result->getAttacker();
-        const Batallion& attackerCas = result->getAttackerCasualities();
-        const Batallion& defender = result->getDefender();
-        const Batallion& defenderCas = result->getDefenderCasualities();
+        const Batallion& attacker = result->attacker();
+        const Batallion& attackerCas = result->attackerCasualities();
+        const Batallion& defender = result->defender();
+        const Batallion& defenderCas = result->defenderCasualities();
         
         averageAttackerUnit += (attacker.size());
         

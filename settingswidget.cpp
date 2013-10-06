@@ -156,21 +156,21 @@ void SettingsWidget::buttonClicked() {
 }
 
 bool SettingsWidget::isMapInstalled(const QString& map) {
-    QDir mapsDir = qApp->getMapsDirectory();
+    QDir mapsDir = qApp->mapsDirectory();
     return mapsDir.exists(map);
 }
 
 bool SettingsWidget::needsUpdate(const QString& map) {
-    QSettings* remote = qApp->getRemoteSettings();
+    QSettings* remote = qApp->remoteSettings();
     float remoteVersionFloat = remote->value(map).toFloat();
 
-    float localVersionFloat = qApp->getLocalMapVersion(map).toFloat();
+    float localVersionFloat = qApp->localMapVersion(map).toFloat();
 
     return (localVersionFloat < remoteVersionFloat);
 }
 
 void SettingsWidget::removeMap(const QString& map) {
-    QDir mapsDir = qApp->getMapsDirectory();
+    QDir mapsDir = qApp->mapsDirectory();
     deleteDir(mapsDir.absolutePath() + "/" + map);
     mapsDir.remove(map);
 
@@ -184,7 +184,7 @@ void SettingsWidget::setupMapEntry(const MapEntry* mapEntry, QSettings* remote) 
     remote->beginGroup("Maps");
     QString mapName = mapEntry->mapName;
     mapEntry->nameLabel->setText(mapName);
-    QString localVersionString = qApp->getLocalMapVersion(mapName);
+    QString localVersionString = qApp->localMapVersion(mapName);
     mapEntry->localVersionLabel->setText(localVersionString);
     const QString& remoteVersionString = remote->value(mapName).toString();
     mapEntry->remoteVersionLabel->setText(remoteVersionString);
@@ -208,11 +208,11 @@ void SettingsWidget::setupMapEntry(const MapEntry* mapEntry, QSettings* remote) 
 }
 
 void SettingsWidget::downloadMap(const QString& map) {
-    QDir mapsDir = qApp->getMapsDirectory();
-    downloadFile(_manager, qApp->getRemoteMapIndexUrl(map), qApp->getTemporaryIndexFileString());
+    QDir mapsDir = qApp->mapsDirectory();
+    downloadFile(_manager, qApp->remoteMapIndexURL(map), qApp->temporaryIndexFileString());
 
     QDomDocument doc("document");
-    QFile file(qApp->getTemporaryIndexFileString());
+    QFile file(qApp->temporaryIndexFileString());
     if (!file.open(QIODevice::ReadOnly)) {
         QMessageBox::critical(0, "File Error", "Could not find the file");
         return;
@@ -242,20 +242,20 @@ void SettingsWidget::downloadMap(const QString& map) {
             const QDomElement& fileElem = file.toElement();
             const QString& fileName = fileElem.nodeName();
             const QString& target = mapsDir.absolutePath() + "/" + fileName + ".png";
-            const QString& targetUrl = qApp->getBaseUrlString() + map + "/" + factionName + "/" + fileName + ".png";
+            const QString& targetUrl = qApp->baseURLString() + map + "/" + factionName + "/" + fileName + ".png";
             QNetworkReply* reply = _manager.get(QNetworkRequest(QUrl(targetUrl)));
             _replyFileNameMap.insert(reply, target);
             connect(reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
         }
         mapsDir.cdUp();
     }
-    QNetworkReply* reply = _manager.get(QNetworkRequest(QUrl(qApp->getBaseUrlString() + map + "/" + map + ".xml")));
+    QNetworkReply* reply = _manager.get(QNetworkRequest(QUrl(qApp->baseURLString() + map + "/" + map + ".xml")));
     _replyFileNameMap.insert(reply, mapsDir.absolutePath() + "/" + map + ".xml");
     connect(reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
 
-    QSettings* remote = qApp->getRemoteSettings();
+    QSettings* remote = qApp->remoteSettings();
     remote->beginGroup("Maps");
-    QFile versionFile(qApp->getLocalMapVersionFileString(map));
+    QFile versionFile(qApp->localMapVersionFileString(map));
     versionFile.open(QIODevice::WriteOnly);
     versionFile.write(remote->value(map).toString().toLocal8Bit());
     remote->endGroup();
@@ -285,7 +285,7 @@ void SettingsWidget::createMapEntries() {
         delete mapEntry;
     _maps.clear();
 
-    QSettings* remoteSettings = qApp->getRemoteSettings();
+    QSettings* remoteSettings = qApp->remoteSettings();
 
     remoteSettings->beginGroup("Maps");
     QStringList allMaps = remoteSettings->allKeys();
