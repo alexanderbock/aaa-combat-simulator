@@ -1,17 +1,40 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "combatthread.h"
 
-OrderOfLoss ool_;
+OrderOfLoss _ool;
 
 CombatThread::CombatThread(const Batallion& attacker, const Batallion& defender, bool isLandBattle, bool isAmphibiousCombat, bool landUnitMustLive, OrderOfLoss ool, int seedHelper)
     : QRunnable()
-    , attacker_(attacker)
-    , defender_(defender)
-    , isLandBattle_(isLandBattle)
-    , isAmphibiousCombat_(isAmphibiousCombat)
-    , landUnitMustLive_(landUnitMustLive)
-    , seedHelper_(seedHelper)
+    , _attacker(attacker)
+    , _defender(defender)
+    , _isLandBattle(isLandBattle)
+    , _isAmphibiousCombat(isAmphibiousCombat)
+    , _landUnitMustLive(landUnitMustLive)
+    , _seedHelper(seedHelper)
 {
-    ool_ = ool;
+    _ool = ool;
     setAutoDelete(false);
 }
 
@@ -32,21 +55,21 @@ inline bool lessThanAttack(const UnitLite& p1, const UnitLite& p2) {
     if (p2.hasTwoRolls() && !p1.hasTwoRolls())
         return false;
 
-    if (ool_ == OrderOfLossValue) {
-        if (p1.getAttack() < p2.getAttack())
+    if (_ool == OrderOfLossValue) {
+        if (p1.attackValue() < p2.attackValue())
             return true;
-        else if (p1.getAttack() > p2.getAttack())
+        else if (p1.attackValue() > p2.attackValue())
             return false;
         else
-            return (p1.getIPC() <= p2.getIPC());
+            return (p1.ipcValue() <= p2.ipcValue());
     }
     else {
-        if (p1.getIPC() < p2.getIPC())
+        if (p1.ipcValue() < p2.ipcValue())
             return true;
-        else if (p1.getIPC() > p2.getIPC())
+        else if (p1.ipcValue() > p2.ipcValue())
             return false;
         else
-            return (p1.getAttack() <= p2.getAttack());
+            return (p1.attackValue() <= p2.attackValue());
     }
 }
 
@@ -63,21 +86,21 @@ inline bool lessThanDefense(const UnitLite& p1, const UnitLite& p2) {
     if (p2.hasTwoRolls() && !p1.hasTwoRolls())
         return false;
 
-    if (ool_ == OrderOfLossValue) {
-        if (p1.getDefense() < p2.getDefense())
+    if (_ool == OrderOfLossValue) {
+        if (p1.defenseValue() < p2.defenseValue())
             return true;
-        else if (p1.getDefense() > p2.getDefense())
+        else if (p1.defenseValue() > p2.defenseValue())
             return false;
         else
-            return (p1.getIPC() <= p2.getIPC());
+            return (p1.ipcValue() <= p2.ipcValue());
     }
     else {
-        if (p1.getIPC() < p2.getIPC())
+        if (p1.ipcValue() < p2.ipcValue())
             return true;
-        else if (p1.getIPC() > p2.getIPC())
+        else if (p1.ipcValue() > p2.ipcValue())
             return false;
         else
-            return (p1.getDefense() <= p2.getDefense());
+            return (p1.defenseValue() <= p2.defenseValue());
     }
 }
 
@@ -216,9 +239,9 @@ void applyCasualtySea(Batallion& bat, Batallion& casBat, int casualties, bool is
 }
 
 void CombatThread::run() {
-    qsrand(seedHelper_);
+    qsrand(_seedHelper);
 
-    if (isLandBattle_)
+    if (_isLandBattle)
         runLandBattle();
     else
         runSeaBattle();     
@@ -226,164 +249,164 @@ void CombatThread::run() {
 
 void CombatThread::runLandBattle() {
     // AA fire
-    for (int i = 0; i < defender_.size(); ++i) {
-        const UnitLite& uDefender = defender_[i];
+    for (int i = 0; i < _defender.size(); ++i) {
+        const UnitLite& uDefender = _defender[i];
         if (uDefender.isAA()) {
-            for (int j = 0; j < attacker_.size(); ++j) {
-                const UnitLite& uAttacker = attacker_[j];
+            for (int j = 0; j < _attacker.size(); ++j) {
+                const UnitLite& uAttacker = _attacker[j];
                 if (uAttacker.isAir()) {
-                    for (int k = 0; k < uDefender.getNumRolls(); ++k) {
+                    for (int k = 0; k < uDefender.numRolls(); ++k) {
                         int aaRoll = getRoll();
-                        if (aaRoll <= uDefender.getDefense()) {
-                            attackerCasualities_.append(uAttacker);
-                            attacker_.removeAt(j--);
+                        if (aaRoll <= uDefender.defenseValue()) {
+                            _attackerCasualities.append(uAttacker);
+                            _attacker.removeAt(j--);
                         }
                     }
                 }
             }
-            defender_.removeAt(i--);
+            _defender.removeAt(i--);
         }
     }
 
     // Bombardment
-    for (int i = 0; i < attacker_.size(); ++i) {
-        const UnitLite& uAtt = attacker_[i];
+    for (int i = 0; i < _attacker.size(); ++i) {
+        const UnitLite& uAtt = _attacker[i];
 
         if (uAtt.canBombard()) {
-            for (int j = 0; j < uAtt.getNumRolls(); ++j) {
+            for (int j = 0; j < uAtt.numRolls(); ++j) {
                 int bombardRoll = getRoll();
-                if (bombardRoll <= uAtt.getBombardmentValue())
-                    applyCasualtyLand(defender_, defenderCasualities_, 1, true, false);
+                if (bombardRoll <= uAtt.bombardmentValue())
+                    applyCasualtyLand(_defender, _defenderCasualities, 1, true, false);
                     // Bombarded -> remove it
             }
-            attacker_.removeAt(i--);
+            _attacker.removeAt(i--);
         }
     }
 
     // regular battle
-    while ((attacker_.size() > 0) && (defender_.size() > 0)) {
+    while ((_attacker.size() > 0) && (_defender.size() > 0)) {
         int attackerHits = 0;
         int defenderHits = 0;
-        int supporter = getNumberOfSupporters(attacker_);
+        int supporter = getNumberOfSupporters(_attacker);
 
-        foreach (const UnitLite& unit, attacker_) {
-            for (int i = 0; i < unit.getNumRolls(); ++i) {
-                int roll= getRoll();
-                if (unit.isArtillerySupportable() && (supporter > 0)) {
-                    roll--;
-                    supporter--;
-                }
-                if (isAmphibiousCombat_ && unit.isMarine())
-                    roll--;
-                
-                if (roll <= unit.getAttack())
-                    attackerHits++;
-            }
-        }
-
-        foreach (const UnitLite& unit, defender_) {
-            for (int i = 0; i < unit.getNumRolls(); ++i) {
+        foreach (const UnitLite& unit, _attacker) {
+            for (int i = 0; i < unit.numRolls(); ++i) {
                 int roll = getRoll();
-                if (roll <= unit.getDefense())
-                    defenderHits++;
+                if (unit.isArtillerySupportable() && (supporter > 0)) {
+                    --roll;
+                    --supporter;
+                }
+                if (_isAmphibiousCombat && unit.isMarine())
+                    --roll;
+                
+                if (roll <= unit.attackValue())
+                    ++attackerHits;
             }
         }
 
-        applyCasualtyLand(attacker_, attackerCasualities_, defenderHits, false, landUnitMustLive_);
-        applyCasualtyLand(defender_, defenderCasualities_, attackerHits, true, false);
+        foreach (const UnitLite& unit, _defender) {
+            for (int i = 0; i < unit.numRolls(); ++i) {
+                int roll = getRoll();
+                if (roll <= unit.defenseValue())
+                    ++defenderHits;
+            }
+        }
+
+        applyCasualtyLand(_attacker, _attackerCasualities, defenderHits, false, _landUnitMustLive);
+        applyCasualtyLand(_defender, _defenderCasualities, attackerHits, true, false);
     }
 
 }
 
 void CombatThread::runSeaBattle() {
-    while ((attacker_.size() > 0) && (defender_.size() > 0)) {
+    while ((_attacker.size() > 0) && (_defender.size() > 0)) {
         int attackerSubHits = 0;
         int defenderSubHits = 0;
         int attackerHits = 0;
         int defenderHits = 0;
-        int supporter = getNumberOfSupporters(attacker_);
+        int supporter = getNumberOfSupporters(_attacker);
 
         // Sub Fire
-        foreach (const UnitLite& unit, attacker_) {
+        foreach (const UnitLite& unit, _attacker) {
             if (unit.isSub()) {
-                for (int i = 0; i < unit.getNumRolls(); ++i) {
+                for (int i = 0; i < unit.numRolls(); ++i) {
                     int roll = getRoll();
                     if (unit.isArtillerySupportable() && (supporter > 0)) {
-                        roll--;
-                        supporter--;
+                        --roll;
+                        --supporter;
                     }
-                    if (roll <= unit.getAttack())
-                        attackerSubHits++;
+                    if (roll <= unit.attackValue())
+                        ++attackerSubHits;
                 }
             }
         }
 
-        foreach (const UnitLite& unit, defender_) {
+        foreach (const UnitLite& unit, _defender) {
             if (unit.isSub()) {
-                for (int i = 0; i < unit.getNumRolls(); ++i) {
+                for (int i = 0; i < unit.numRolls(); ++i) {
                     int roll = getRoll();
-                    if (roll <= unit.getDefense())
-                        defenderSubHits++;
+                    if (roll <= unit.defenseValue())
+                        ++defenderSubHits;
                 }
             }
         }
 
         // if the attacker doesn't have destroyers, apply the casualties directly
-        if (!hasDestroyer(attacker_)) {
-            applyCasualtySub(attacker_, attackerCasualities_, defenderSubHits, false);
+        if (!hasDestroyer(_attacker)) {
+            applyCasualtySub(_attacker, _attackerCasualities, defenderSubHits, false);
             defenderSubHits = 0;
         }
 
         // if the defender doesn't have destroyers, apply the casualites directly
-        if (!hasDestroyer(defender_)) {
-            applyCasualtySub(defender_, defenderCasualities_, attackerSubHits, true);
+        if (!hasDestroyer(_defender)) {
+            applyCasualtySub(_defender, _defenderCasualities, attackerSubHits, true);
             attackerSubHits = 0;
         }
 
-        foreach (const UnitLite& unit, attacker_) {
+        foreach (const UnitLite& unit, _attacker) {
             if (!unit.isSub()) {
-                for (int i = 0; i < unit.getNumRolls(); ++i) {
+                for (int i = 0; i < unit.numRolls(); ++i) {
                     int roll = getRoll();
                     if (unit.isArtillerySupportable() && (supporter > 0)) {
-                        roll--;
-                        supporter--;
+                        --roll;
+                        --supporter;
                     }
 
-                    if (roll <= unit.getAttack())
-                        attackerHits++;
+                    if (roll <= unit.attackValue())
+                        ++attackerHits;
                 }
             }
         }
 
-        foreach (const UnitLite& unit, defender_) {
+        foreach (const UnitLite& unit, _defender) {
             if (!unit.isSub()) {
-                for (int i = 0; i < unit.getNumRolls(); ++i) {
+                for (int i = 0; i < unit.numRolls(); ++i) {
                     int roll = getRoll();
-                    if (roll <= unit.getDefense())
-                        defenderHits++;
+                    if (roll <= unit.defenseValue())
+                        ++defenderHits;
                 }
             }
         }
 
-        applyCasualtySub(attacker_, attackerCasualities_, defenderSubHits, false);
-        applyCasualtySea(attacker_, attackerCasualities_, defenderHits, false);
-        applyCasualtySub(defender_, defenderCasualities_, attackerSubHits, true);
-        applyCasualtySea(defender_, defenderCasualities_, attackerHits, true);
+        applyCasualtySub(_attacker, _attackerCasualities, defenderSubHits, false);
+        applyCasualtySea(_attacker, _attackerCasualities, defenderHits, false);
+        applyCasualtySub(_defender, _defenderCasualities, attackerSubHits, true);
+        applyCasualtySea(_defender, _defenderCasualities, attackerHits, true);
     }   
 }
 
 const Batallion& CombatThread::getAttacker() const {
-    return attacker_;
+    return _attacker;
 }
 
 const Batallion& CombatThread::getAttackerCasualities() const {
-    return attackerCasualities_;
+    return _attackerCasualities;
 }
 
 const Batallion& CombatThread::getDefender() const {
-    return defender_;
+    return _defender;
 }
 
 const Batallion& CombatThread::getDefenderCasualities() const {
-    return defenderCasualities_;
+    return _defenderCasualities;
 }

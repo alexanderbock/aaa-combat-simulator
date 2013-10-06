@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "unit.h"
 
 #include <math.h>
@@ -14,11 +37,11 @@ const int DEFENSEBITMASK(56);   // == 2^3 + 2^4 + 2^5
 const int SUPPORTBITMASK(7);     // == 2^0 + 2^1 + 2^2
 const int BOMBARDMENTBITMASK(56);   // == 2^3 + 2^4 + 2^5
 const int AABITMASK(64);        // == 2^6
-const int MARINEBITMASK(64)     // == 2^6
+const int MARINEBITMASK(64);    // == 2^6
 const int HITBITMASK(128);      // == 2^7
 
 Unit::Unit(const QDomElement& element) {
-    name_ = element.nodeName();
+    _name = element.nodeName();
 
     QDomNodeList children = element.childNodes();
     for (int i = 0; i < children.count(); ++i) {
@@ -27,70 +50,68 @@ Unit::Unit(const QDomElement& element) {
 
         QString key = childElem.nodeName();
         QString value;
-        if (childElem.hasAttribute("value")) {
+        if (childElem.hasAttribute("value"))
             value = childElem.attribute("value");
-        }
-        else {
+        else
             value = "";
-        }
 
         if (key == "ID")
-            id_ = value.toInt();
+            _id = value.toInt();
         else
-            information_.insert(key, value);
+            _information.insert(key, value);
     }
 }
 
 bool Unit::operator==(const Unit& rhs) const {
-    return getID() == rhs.getID();
+    return id() == rhs.id();
 }
 
 bool Unit::operator!=(const Unit& rhs) const {
     return !(*this == rhs);
 }
 
-int Unit::getID() const {
-    return id_;
+int Unit::id() const {
+    return _id;
 }
 
-QString Unit::getName() const {
-    return name_;
+QString Unit::name() const {
+    return _name;
 }
 
-int Unit::getAttack() const {
-    return information_.value("Attack").toInt();
+int Unit::attackValue() const {
+    return _information.value("Attack").toInt();
 }
 
-int Unit::getDefense() const {
-    return information_.value("Defense").toInt();
+int Unit::defenseValue() const {
+    return _information.value("Defense").toInt();
 }
 
-float Unit::getIPC() const {
-    return information_.value("IPC").toFloat();
+float Unit::ipcValue() const {
+    return _information.value("IPC").toFloat();
 }
 
 bool Unit::canAttack() const {
-    return information_.contains("canAttack");
+    return _information.contains("canAttack");
 }
 
 bool Unit::isAA() const {
-    return information_.contains("isAA");
+    return _information.contains("isAA");
 }
 
 bool Unit::isArtillerySupportable() const {
-    return information_.contains("isArtillerySupportable");
+    return _information.contains("isArtillerySupportable");
 }
 
 bool Unit::isArtillery() const {
-    return information_.contains("isArtillery");
+    return _information.contains("isArtillery");
 }
 
 bool Unit::isAir() const {
-    return information_.contains("isAir");
+    return _information.contains("isAir");
 }
 
 bool Unit::isSea() const {
-    return information_.contains("isSea");
+    return _information.contains("isSea");
 }
 
 bool Unit::isLand() const {
@@ -98,196 +119,196 @@ bool Unit::isLand() const {
 }
 
 bool Unit::canBombard() const {
-    return information_.contains("canBombard");
+    return _information.contains("canBombard");
 }
 
 bool Unit::isTwoHit() const {
-    return information_.contains("isTwoHit");
+    return _information.contains("isTwoHit");
 }
 
 bool Unit::isHit() const {
-    return information_.value("isHit", "false") == "true";
+    return _information.value("isHit", "false") == "true";
 }
 
 void Unit::setHit() {
-    information_["isHit"] = "true";
+    _information["isHit"] = "true";
 }
 
 bool Unit::isDestroyer() const {
-    return information_.contains("isDestroyer");
+    return _information.contains("isDestroyer");
 }
 
 bool Unit::isSub() const {
-    return information_.contains("isSub");
+    return _information.contains("isSub");
 }
 
 bool Unit::hasTwoRolls() const {
-    return (getNumRolls() == 2);
+    return (numRolls() == 2);
 }
 
-int Unit::getNumRolls() const {
-    return information_.value("NumRolls", "1").toInt();
+int Unit::numRolls() const {
+    return _information.value("NumRolls", "1").toInt();
 }
 
-int Unit::getBombardmentValue() const {
-    return information_.value("Bombard", information_.value("Attack")).toInt();
+int Unit::bombardmentValue() const {
+    return _information.value("Bombard", _information.value("Attack")).toInt();
 }
 
-int Unit::getNumArtillery() const {
-    return information_.value("UnitSupportCount", "1").toInt();
+int Unit::numArtillery() const {
+    return _information.value("UnitSupportCount", "1").toInt();
 }
 
 bool Unit::isMarine() const {
-    return information_.value("isMarine", "0").toBool();
+    return static_cast<bool>(_information.value("isMarine", "0").toInt());
 }
 
-QString Unit::getDescription() const {
+QString Unit::description() const {
     QString result;
-    result += name_ + "\n";
-    result += "\nAttack: " + information_["Attack"];
-    result += "\nDefense: " + information_["Defense"];
-    result += "\nIPC: " + information_["IPC"];
-    foreach (const QString& key, information_.keys()) {
+    result += _name + "\n";
+    result += "\nAttack: " + _information["Attack"];
+    result += "\nDefense: " + _information["Defense"];
+    result += "\nIPC: " + _information["IPC"];
+    foreach (const QString& key, _information.keys()) {
         if (key == "Attack" || key == "Defense" || key == "IPC")
             continue;
 
         result += "\n" + key;
-        if (!information_[key].isEmpty())
-            result += ": " + information_[key];
+        if (!_information[key].isEmpty())
+            result += ": " + _information[key];
     }
     return result;
 }
 
 UnitLite::UnitLite(const Unit* const unit, int ipcFactor) {
-    int id = unit->getID();
-    int numRolls = unit->getNumRolls();
+    int id = unit->id();
+    int numRolls = unit->numRolls();
     if (id > 63)
         QMessageBox::critical(0, "XML Error", "A maximum number of 63 units is supported");
     if (numRolls > 3)
         QMessageBox::critical(0, "XML Error", "A maximum number of 3 rolls per unit is supported");
-    numRollsAndID_ = numRolls + 4*id;
+    _numRollsAndID = numRolls + 4*id;
 
-    int attackValue = unit->getAttack();
-    int defenseValue = unit->getDefense();
+    int attackValue = unit->attackValue();
+    int defenseValue = unit->defenseValue();
     
-    combatValue_ = (defenseValue << 3) + attackValue;
-    combatValue2_ = (unit->getBombardmentValue() << 3) + unit->getNumArtillery();
+    _combatValue = (defenseValue << 3) + attackValue;
+    _combatValue2 = (unit->bombardmentValue() << 3) + unit->numArtillery();
 
-    float ipc = unit->getIPC();
-    ipc_ = static_cast<unsigned char>(ipc * ipcFactor);
+    float ipc = unit->ipcValue();
+    _ipc = static_cast<unsigned char>(ipc * ipcFactor);
 
-    features_ = 0;
+    _features = 0;
 
     if (unit->isArtillery())
-        features_ |= FeaturesIsArtillery;
+        _features |= FeaturesIsArtillery;
     if (unit->isArtillerySupportable())
-        features_ |= FeaturesIsArtillerySupportable;
+        _features |= FeaturesIsArtillerySupportable;
     if (unit->isTwoHit())
-        features_ |= FeaturesIsTwoHit;
+        _features |= FeaturesIsTwoHit;
     if (unit->isAA())
-        combatValue_ |= AABITMASK;
+        _combatValue |= AABITMASK;
     if (unit->isAir())
-        features_ |= FeaturesIsAir;
+        _features |= FeaturesIsAir;
     if (unit->isSea())
-        features_ |= FeaturesIsSea;
+        _features |= FeaturesIsSea;
     if (unit->canBombard())
-        features_ |= FeaturesCanBombard;
+        _features |= FeaturesCanBombard;
     if (unit->isDestroyer())
-        features_ |= FeaturesIsDestroyer;
+        _features |= FeaturesIsDestroyer;
     if (unit->isSub())
-        features_ |= FeaturesIsSub;
+        _features |= FeaturesIsSub;
     if (unit->isMarine())
-        combatValue2_ |= MARINEBITMASK;
+        _combatValue2 |= MARINEBITMASK;
 }
 
 bool UnitLite::operator==(const UnitLite& rhs) const {
-    return (this->getID() == rhs.getID());
+    return (this->id() == rhs.id());
 }
 
 bool UnitLite::operator!=(const UnitLite& rhs) const {
     return !(*this == rhs);
 }
 
-int UnitLite::getID() const {
-    return numRollsAndID_ / 4;
+int UnitLite::id() const {
+    return _numRollsAndID / 4;
 }
 
-int UnitLite::getAttack() const {
-    return combatValue_ & ATTACKBITMASK;
+int UnitLite::attackValue() const {
+    return _combatValue & ATTACKBITMASK;
 }
 
-int UnitLite::getDefense() const {
-    return (combatValue_ & DEFENSEBITMASK) >> 3;
+int UnitLite::defenseValue() const {
+    return (_combatValue & DEFENSEBITMASK) >> 3;
 }
 
-float UnitLite::getIPC() const {
-    return ipc_;
+float UnitLite::ipcValue() const {
+    return _ipc;
 }
 
 bool UnitLite::isAA() const {
-    return combatValue_ & AABITMASK;
+    return _combatValue & AABITMASK;
 }
 
 bool UnitLite::isArtillerySupportable() const {
-    return features_ & FeaturesIsArtillerySupportable;
+    return _features & FeaturesIsArtillerySupportable;
 }
 
 bool UnitLite::isArtillery() const {
-    return features_ & FeaturesIsArtillery;
+    return _features & FeaturesIsArtillery;
 }
 
 bool UnitLite::isAir() const {
-    return features_ & FeaturesIsAir;
+    return _features & FeaturesIsAir;
 }
 
 bool UnitLite::isSea() const {
-    return features_ & FeaturesIsSea;
+    return _features & FeaturesIsSea;
 }
 
 bool UnitLite::isLand() const {
-    return !(features_ & (FeaturesIsSea | FeaturesIsAir));
+    return !(_features & (FeaturesIsSea | FeaturesIsAir));
 }
 
 bool UnitLite::canBombard() const {
-    return features_ & FeaturesCanBombard;
+    return _features & FeaturesCanBombard;
 }
 
 bool UnitLite::isTwoHit() const {
-    return features_ & FeaturesIsTwoHit;
+    return _features & FeaturesIsTwoHit;
 }
 
 bool UnitLite::isHit() const {
-    return combatValue_ & HITBITMASK;
+    return _combatValue & HITBITMASK;
 }
 
 void UnitLite::setHit() {
-    combatValue_ |= HITBITMASK;
+    _combatValue |= HITBITMASK;
 }
 
 bool UnitLite::isDestroyer() const {
-    return features_ & FeaturesIsDestroyer;
+    return _features & FeaturesIsDestroyer;
 }
 
 bool UnitLite::isSub() const {
-    return features_ & FeaturesIsSub;
+    return _features & FeaturesIsSub;
 }
 
 bool UnitLite::hasTwoRolls() const {
-    return getNumRolls() == 2;
+    return numRolls() == 2;
 }
 
-int UnitLite::getNumRolls() const {
-    return numRollsAndID_ % 4;
+int UnitLite::numRolls() const {
+    return _numRollsAndID % 4;
 }
 
-int UnitLite::getBombardmentValue() const {
-    return combatValue2_ & BOMBARDMENTBITMASK;
+int UnitLite::bombardmentValue() const {
+    return _combatValue2 & BOMBARDMENTBITMASK;
 }
 
-int UnitLite::getNumArtillery() const {
-    return combatValue2_ & SUPPORTBITMASK;
+int UnitLite::numArtillery() const {
+    return _combatValue2 & SUPPORTBITMASK;
 }
 
 bool UnitLite::isMarine() const {
-    return combatValue2_ & MARINEBITMASK;
+    return _combatValue2 & MARINEBITMASK;
 }

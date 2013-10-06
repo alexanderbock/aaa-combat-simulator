@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #ifndef BOCK_SETTINGSWIDGET_H
 #define BOCK_SETTINGSWIDGET_H
 
@@ -17,11 +40,11 @@ class QTextEdit;
 void downloadFile(QNetworkAccessManager& manager, const QUrl& url, const QString& filename);
 
 struct MapEntry {
-    QString mapName_;
-    QLabel* nameLabel_;
-    QLabel* localVersionLabel_;
-    QLabel* remoteVersionLabel_;
-    QPushButton* actionButton_;
+    QString mapName;
+    QLabel* nameLabel;
+    QLabel* localVersionLabel;
+    QLabel* remoteVersionLabel;
+    QPushButton* actionButton;
 
     MapEntry(const QString& mapName);
     ~MapEntry();
@@ -51,16 +74,16 @@ private:
     void setupMapEntry(const MapEntry* mapEntry, QSettings* remote);
     void setButtonsEnabled(bool enabled);
 
-    QNetworkAccessManager manager_;
+    QNetworkAccessManager _manager;
 
-    QGridLayout* layout_;
-    QList<MapEntry*> maps_;
-    QMap<QNetworkReply*, QString> replyFileNameMap_;
-    QLabel* nameLabel_;
-    QLabel* localVersionLabel_;
-    QLabel* remoteVersionLabel_;
-    QTextEdit* statusText_;
-    QString currentMapDownload_;
+    QGridLayout* _layout;
+    QList<MapEntry*> _maps;
+    QMap<QNetworkReply*, QString> _replyFileNameMap;
+    QLabel* _nameLabel;
+    QLabel* _localVersionLabel;
+    QLabel* _remoteVersionLabel;
+    QTextEdit* _statusText;
+    QString _currentMapDownload;
 };
 
 #endif

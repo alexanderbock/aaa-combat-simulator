@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "factionwidget.h"
 
 #include "combatwidget.h"
@@ -19,36 +42,36 @@ DetailedInformationWidget::DetailedInformationWidget(QWidget* parent)
 
 InformationWidget::InformationWidget(QWidget* parent)
     : QGroupBox(parent)
-    , winResult_(0)
-    , drawResult_(0)
-    , unitLeft_(0)
-    , ipcLoss_(0)
-    , detailedInformationWidget_(0)
+    , _winResult(nullptr)
+    , _drawResult(nullptr)
+    , _unitLeft(nullptr)
+    , _ipcLoss(nullptr)
+    , _detailedInformationWidget(nullptr)
 {
-    detailedInformationWidget_ = new DetailedInformationWidget(this);
+    _detailedInformationWidget = new DetailedInformationWidget(this);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     QHBoxLayout* line1 = new QHBoxLayout;
     QLabel* winLabel = new QLabel("Win:");
     line1->addWidget(winLabel);
-    winResult_ = new QLabel("");
-    line1->addWidget(winResult_);
+    _winResult = new QLabel("");
+    line1->addWidget(_winResult);
     line1->addStretch(-1);
     QLabel* drawLabel = new QLabel(":Draw");
-    drawResult_ = new QLabel("");
-    line1->addWidget(drawResult_);
+    _drawResult = new QLabel("");
+    line1->addWidget(_drawResult);
     line1->addWidget(drawLabel);
     mainLayout->addLayout(line1);
 
     QHBoxLayout* line2 = new QHBoxLayout;
     QLabel* unitLabel = new QLabel("Units left:");
     line2->addWidget(unitLabel);
-    unitLeft_ = new QLabel("");
-    line2->addWidget(unitLeft_);
+    _unitLeft = new QLabel("");
+    line2->addWidget(_unitLeft);
     line2->addStretch(-1);
     QLabel* ipcLabel = new QLabel(":IPC Loss");
-    ipcLoss_ = new QLabel("");
-    line2->addWidget(ipcLoss_);
+    _ipcLoss = new QLabel("");
+    line2->addWidget(_ipcLoss);
     line2->addWidget(ipcLabel);
     mainLayout->addLayout(line2);
 
@@ -65,81 +88,81 @@ void InformationWidget::setResult(QList<CombatThread*>* results, float winPercen
     QString draw = QString::number(drawPercentage * 100) + "%";
 
     if (doesWin)
-        winResult_->setText("<font color=#00AA00>" + win + "</font>");
+        _winResult->setText("<font color=#00AA00>" + win + "</font>");
     else
-        winResult_->setText("<font color=#AA0000>" + win + "</font>");
+        _winResult->setText("<font color=#AA0000>" + win + "</font>");
 
-    drawResult_->setText(draw);
+    _drawResult->setText(draw);
 
-    unitLeft_->setText(QString::number(averageUnitLeft) + " (" + QString::number(static_cast<float>(totalUnitsAtStart) - averageUnitLeft) + " loss)");
-    ipcLoss_->setText(QString::number(averageIPCLoss));
+    _unitLeft->setText(QString::number(averageUnitLeft) + " (" + QString::number(static_cast<float>(totalUnitsAtStart) - averageUnitLeft) + " loss)");
+    _ipcLoss->setText(QString::number(averageIPCLoss));
 }
 
 void InformationWidget::clearResults() {
-    winResult_->setText("");
-    drawResult_->setText("");
-    unitLeft_->setText("");
-    ipcLoss_->setText("");
+    _winResult->setText("");
+    _drawResult->setText("");
+    _unitLeft->setText("");
+    _ipcLoss->setText("");
 }
 
 void InformationWidget::detailedInformationToggeled(bool b) {
-    detailedInformationWidget_->setVisible(b);
+    _detailedInformationWidget->setVisible(b);
 }
 
 
 FactionWidget::FactionWidget(CombatWidget* parent, const QString& title, FactionSide side)
     : QGroupBox(parent)
-    , unitsLayout_(0)
-    , factionBox_(0)
-    , parent_(parent)
-    , side_(side)
-    , infoWidget_(0)
+    , _unitsLayout(nullptr)
+    , _factionBox(nullptr)
+    , _parent(parent)
+    , _side(side)
+    , _infoWidget(nullptr)
 {
     QVBoxLayout* layout = new QVBoxLayout(this);
 
     QLabel* titleLabel = new QLabel(title);
     layout->addWidget(titleLabel);
 
-    factionBox_ = new QComboBox;
+    _factionBox = new QComboBox;
     initFactions();
-    connect(factionBox_, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(recreateUnits()));
-    layout->addWidget(factionBox_);
+    connect(_factionBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(recreateUnits()));
+    layout->addWidget(_factionBox);
 
     QGroupBox* unitsGroupBox = new QGroupBox;
     QScrollArea* unitsScrollArea = new QScrollArea;
-    unitsLayout_ = new QGridLayout(unitsGroupBox);
+    _unitsLayout = new QGridLayout(unitsGroupBox);
     createUnits();
     unitsScrollArea->setMinimumWidth(300);
     unitsScrollArea->setWidgetResizable(true);
     unitsScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    unitsLayout_->setVerticalSpacing(0);
+    _unitsLayout->setVerticalSpacing(0);
     unitsScrollArea->setWidget(unitsGroupBox);
-    unitsGroupBox->setLayout(unitsLayout_);
+    unitsGroupBox->setLayout(_unitsLayout);
     layout->addWidget(unitsScrollArea);
 
-    infoWidget_ = new InformationWidget(this);
-    infoWidget_->setEnabled(false);
-    layout->addWidget(infoWidget_);
+    _infoWidget = new InformationWidget(this);
+    _infoWidget->setEnabled(false);
+    layout->addWidget(_infoWidget);
 }
 
 void FactionWidget::initFactions() {
-    QStringList factions = parent_->getFactions();
+    QStringList factions = _parent->getFactions();
 
     foreach (const QString& faction, factions)
-        factionBox_->addItem(parent_->getFlag(faction), faction);
+        _factionBox->addItem(_parent->getFlag(faction), faction);
 
-    factionBox_->insertSeparator(factionBox_->count());
+    _factionBox->insertSeparator(_factionBox->count());
 
-    QStringList groups = parent_->getGroups();
+    QStringList groups = _parent->getGroups();
     foreach (const QString& group, groups) {
-        factionBox_->addItem(group);
+        _factionBox->addItem(group);
     }
 }
 
 void FactionWidget::createUnits() {
-    const QString& faction = factionBox_->currentText();
-    if (parent_->getGroups().contains(faction)) {
-        QStringList factions = parent_->getFactionsForGroup(faction);
+    const QString& faction = _factionBox->currentText();
+    if (_parent->getGroups().contains(faction)) {
+        QStringList factions = _parent->getFactionsForGroup(faction);
         foreach (const QString& f, factions)
             createUnits(f);
     }
@@ -148,22 +171,22 @@ void FactionWidget::createUnits() {
 }
 
 void FactionWidget::createUnits(const QString& faction) {
-    QList<Unit*> units = parent_->getUnits();
+    QList<Unit*> units = _parent->getUnits();
 
     foreach (Unit* unit, units) {
-        QPixmap pm = parent_->getUnitIcon(faction, unit->getID());
+        QPixmap pm = _parent->getUnitIcon(faction, unit->getID());
         if (pm.isNull())
             continue;
 
-        if ((side_ == FactionSideAttacker) && (unit->getAttack() == 0) && !unit->canAttack())
+        if ((_side == FactionSideAttacker) && (unit->getAttack() == 0) && !unit->canAttack())
             continue;
 
-        if ((side_ == FactionSideDefender) && (unit->getDefense() == 0))
+        if ((_side == FactionSideDefender) && (unit->getDefense() == 0))
             continue;
 
-        if (parent_->isLandBattle()) {
+        if (_parent->isLandBattle()) {
             if (unit->isSea()) {
-                if (side_ == FactionSideDefender)
+                if (_side == FactionSideDefender)
                     continue;
             else if (!unit->canBombard())
                 continue;
@@ -175,17 +198,17 @@ void FactionWidget::createUnits(const QString& faction) {
         }
 
         UnitWidget* unitWidget = new UnitWidget(this, unit, pm);
-        unitsLayout_->addWidget(unitWidget, unitWidgets_.size() / 2, unitWidgets_.size() % 2);
-        unitWidgets_.append(unitWidget);
+        _unitsLayout->addWidget(unitWidget, _unitWidgets.size() / 2, _unitWidgets.size() % 2);
+        _unitWidgets.append(unitWidget);
     }
 }
 
 void FactionWidget::deleteUnits() {
-    foreach (UnitWidget* unitWidget, unitWidgets_) {
-        unitsLayout_->removeWidget(unitWidget);
+    foreach (UnitWidget* unitWidget, _unitWidgets) {
+        _unitsLayout->removeWidget(unitWidget);
         delete unitWidget;
     }
-    unitWidgets_.clear();
+    _unitWidgets.clear();
 }
 
 void FactionWidget::recreateUnits() {
@@ -195,7 +218,7 @@ void FactionWidget::recreateUnits() {
 
 QList<QPair<Unit*, int> > FactionWidget::getUnits() const {
     QList<QPair<Unit*, int> > result;
-    foreach (UnitWidget* unitWidget, unitWidgets_) {
+    foreach (UnitWidget* unitWidget, _unitWidgets) {
         QPair<Unit*, int> units = unitWidget->getUnits();
         if (units.second > 0)
             result.append(units);
@@ -208,7 +231,7 @@ void FactionWidget::setUnits(const QList<QPair<Unit*, int> >& units) {
     foreach (p, units) {
         Unit* u = p.first;
         int n = p.second;
-        foreach (UnitWidget* w, unitWidgets_) {
+        foreach (UnitWidget* w, _unitWidgets) {
             if (w->getWidgetUnit() == u) {
                 w->setAmount(n);
                 break;
@@ -218,26 +241,26 @@ void FactionWidget::setUnits(const QList<QPair<Unit*, int> >& units) {
 }
 
 void FactionWidget::clear() {
-    foreach (UnitWidget* unitWidget, unitWidgets_) {
+    foreach (UnitWidget* unitWidget, _unitWidgets) {
         unitWidget->setAmount(0);
     }
 }
 
 
 QString FactionWidget::getFaction() const {
-    return factionBox_->currentText();
+    return _factionBox->currentText();
 }
 
 void FactionWidget::setFaction(const QString& faction) {
-    int index = factionBox_->findText(faction);
-    factionBox_->setCurrentIndex(index);
+    int index = _factionBox->findText(faction);
+    _factionBox->setCurrentIndex(index);
 }
 
 void FactionWidget::setResults(QList<CombatThread*>* results, float winPercentage, float drawPercentage,
                                bool doesWin, float averageUnitLeft, int totalUnitsAtStart, float averageIPCLoss)
 {
-    infoWidget_->setEnabled(true);
-    infoWidget_->setResult(results, winPercentage, drawPercentage,
+    _infoWidget->setEnabled(true);
+    _infoWidget->setResult(results, winPercentage, drawPercentage,
         doesWin, averageUnitLeft, totalUnitsAtStart,averageIPCLoss);
     //QString win = QString::number(winPercentage * 100) + "%";
     //QString draw = QString::number(drawPercentage * 100) + "%";
@@ -254,5 +277,5 @@ void FactionWidget::setResults(QList<CombatThread*>* results, float winPercentag
 }
 
 void FactionWidget::clearResults() {
-    infoWidget_->clearResults();
+    _infoWidget->clearResults();
 }

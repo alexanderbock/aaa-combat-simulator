@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "combatwidget.h"
 
 #include "controlwidget.h"
@@ -21,40 +44,38 @@
 
 CombatWidget::CombatWidget(const QString& directory, QWidget* parent)
     : QWidget(parent)
-    , attackerWidget_(0)
-    , defenderWidget_(0)
-    //, doppelschlagWidget_(0)
-    , controlWidget_(0)
-    , attackerLayout_(0)
-    , directory_(directory)
-    , ipcFactor_(1)
+    , _attackerWidget(nullptr)
+    , _defenderWidget(nullptr)
+    , _controlWidget(nullptr)
+    , _attackerLayout(nullptr)
+    , _directory(directory)
+    , _ipcFactor(1)
 {
     initXML(directory + "/" + directory + ".xml");
 
     QHBoxLayout* layout = new QHBoxLayout(this);
-    attackerLayout_ = new QVBoxLayout;
+    _attackerLayout = new QVBoxLayout;
     
-    controlWidget_ = new ControlWidget(this);
+    _controlWidget = new ControlWidget(this);
 
-    attackerWidget_ = new FactionWidget(this, "Attacker", FactionSideAttacker);
-    attackerLayout_->addWidget(attackerWidget_);
-    layout->addLayout(attackerLayout_);
+    _attackerWidget = new FactionWidget(this, "Attacker", FactionSideAttacker);
+    _attackerLayout->addWidget(_attackerWidget);
+    layout->addLayout(_attackerLayout);
 
-    defenderWidget_ = new FactionWidget(this, "Defender", FactionSideDefender);
-    layout->addWidget(defenderWidget_);
+    _defenderWidget = new FactionWidget(this, "Defender", FactionSideDefender);
+    layout->addWidget(_defenderWidget);
 
-    connect(controlWidget_, SIGNAL(landBattleCheckboxDidChange()), attackerWidget_, SLOT(recreateUnits()));
-    connect(controlWidget_, SIGNAL(landBattleCheckboxDidChange()), defenderWidget_, SLOT(recreateUnits()));
-    connect(controlWidget_, SIGNAL(switchSides()), this, SLOT(switchCombatSides()));
-    connect(controlWidget_, SIGNAL(startCombat()), this, SLOT(startCombat()));
-    connect(controlWidget_, SIGNAL(clear()), this, SLOT(clear()));
-    layout->addWidget(controlWidget_);
+    connect(_controlWidget, SIGNAL(landBattleCheckboxDidChange()), _attackerWidget, SLOT(recreateUnits()));
+    connect(_controlWidget, SIGNAL(landBattleCheckboxDidChange()), _defenderWidget, SLOT(recreateUnits()));
+    connect(_controlWidget, SIGNAL(switchSides()), this, SLOT(switchCombatSides()));
+    connect(_controlWidget, SIGNAL(startCombat()), this, SLOT(startCombat()));
+    connect(_controlWidget, SIGNAL(clear()), this, SLOT(clear()));
+    layout->addWidget(_controlWidget);
 }
 
 CombatWidget::~CombatWidget() {
-    qDeleteAll(units_);
+    qDeleteAll(_units);
 }
-
 
 void CombatWidget::initXML(const QString& xmlFile) {
     QDomDocument doc("document");
@@ -87,13 +108,13 @@ void CombatWidget::initXML(const QString& xmlFile) {
             return;
         }
         Unit* u = new Unit(elem);
-        units_.append(u);
-        idMap_.insert(u->getID(), u);
+        _units.append(u);
+        _idMap.insert(u->id(), u);
 
-        float ipc = u->getIPC();
+        float ipc = u->ipcValue();
         ipc -= static_cast<int>(ipc);
         if (ipc != 0.f)
-            ipcFactor_ = 2;
+            _ipcFactor = 2;
         //if (ipc != static_cast<float>(static_cast<int>(ipc)))
     }
 
@@ -112,81 +133,81 @@ void CombatWidget::initXML(const QString& xmlFile) {
             const QDomNode& faction = factions.at(j);
             QString factionName = faction.nodeName();
             f.append(factionName);
-            factions_.append(factionName);
+            _factions.append(factionName);
         }
-        factionsDetail_.insert(groupName, f);
+        _factionsDetail.insert(groupName, f);
     }
 }
 
 QStringList CombatWidget::getFactions() const {
-    return factions_;
+    return _factions;
 }
 
 QStringList CombatWidget::getGroups() const {
-    return factionsDetail_.keys();
+    return _factionsDetail.keys();
 }
 
 QStringList CombatWidget::getFactionsForGroup(const QString& group) const {
-    return factionsDetail_.value(group);
+    return _factionsDetail.value(group);
 }
 
 QList<Unit*> CombatWidget::getUnits() const {
-    return units_;
+    return _units;
 }
 
 QIcon CombatWidget::getFlag(const QString& faction) const {
-    return QIcon(directory_ + "/" + faction + "/" + faction + ".png");
+    return QIcon(_directory + "/" + faction + "/" + faction + ".png");
 }
 
 QPixmap CombatWidget::getUnitIcon(const QString& faction, int unitID) const {
     QString unitName = getNameForID(unitID);
-    return QPixmap(directory_ + "/" + faction + "/" + unitName + ".png");
+    return QPixmap(_directory + "/" + faction + "/" + unitName + ".png");
 }
 
 QString CombatWidget::getNameForID(int id) const {
-    return idMap_[id]->getName();
+    return _idMap[id]->getName();
 }
 
 bool CombatWidget::isLandBattle() const {
-    return controlWidget_->isLandBattle();
+    return _controlWidget->isLandBattle();
 }
 
 bool CombatWidget::isAmphibiousCombat() const {
-    return controlWidget_->isAmphibiousCombat();
+    return _controlWidget->isAmphibiousCombat();
 }
 
 bool CombatWidget::landUnitMustLive() const {
-    return controlWidget_->landUnitMustLive();
+    return _controlWidget->landUnitMustLive();
 }
 
 OrderOfLoss CombatWidget::orderOfLoss() const {
-    return controlWidget_->orderOfLoss();
+    return _controlWidget->orderOfLoss();
 }
 
 const QString& CombatWidget::getDirectory() const {
-    return directory_;
+    return _directory;
 }
 
 void CombatWidget::switchCombatSides() {
-    QList<QPair<Unit*, int> > attackerUnits = attackerWidget_->getUnits();
-    QList<QPair<Unit*, int> > defenderUnits = defenderWidget_->getUnits();
+    QList<QPair<Unit*, int> > attackerUnits = _attackerWidget->getUnits();
+    QList<QPair<Unit*, int> > defenderUnits = _defenderWidget->getUnits();
 
-    QString faction = attackerWidget_->getFaction();
-    attackerWidget_->setFaction(defenderWidget_->getFaction());
-    defenderWidget_->setFaction(faction);
+    QString faction = _attackerWidget->getFaction();
+    _attackerWidget->setFaction(_defenderWidget->getFaction());
+    _defenderWidget->setFaction(faction);
 
-    attackerWidget_->setUnits(defenderUnits);
-    defenderWidget_->setUnits(attackerUnits);
+    _attackerWidget->setUnits(defenderUnits);
+    _defenderWidget->setUnits(attackerUnits);
 }
 
 void CombatWidget::clear() {
-    attackerWidget_->clear();
-    defenderWidget_->clear();
+    _attackerWidget->clear();
+    _defenderWidget->clear();
 }
 
 QList<CombatThread*> CombatWidget::startCombat(const QList<UnitLite>& attackerUnits, const QList<UnitLite>& defenderUnits) {
-    attackerWidget_->clearResults();
-    defenderWidget_->clearResults();
+    _attackerWidget->clearResults();
+    _defenderWidget->clearResults();
     qApp->processEvents();
 
     QList<CombatThread*> results;
@@ -217,23 +238,23 @@ CombatWidget::CombatResult CombatWidget::computeCombatResults(const QList<Combat
         averageAttackerUnit += (attacker.size());
         
         foreach (const UnitLite& unit, attackerCas)
-            averageAttackerIPCLoss += unit.getIPC();
+            averageAttackerIPCLoss += unit.ipcValue();
         
         averageDefenderUnit += (defender.size());
         
         foreach (const UnitLite& unit, defenderCas)
-            averageDefenderIPCLoss += unit.getIPC();
+            averageDefenderIPCLoss += unit.ipcValue();
         
         if ((attacker.size() == 0) && (defender.size() > 0))
-            defenderWins++;
+            ++defenderWins;
         else if ((attacker.size() > 0) && (defender.size() == 0))
-            attackerWins++;
+            ++attackerWins;
         else
-            draw++;
+            ++draw;
     }
 
-    float attIpc = static_cast<float>(averageAttackerIPCLoss) / static_cast<float>(ipcFactor_);
-    float defIpc = static_cast<float>(averageDefenderIPCLoss) / static_cast<float>(ipcFactor_);
+    float attIpc = static_cast<float>(averageAttackerIPCLoss) / static_cast<float>(_ipcFactor);
+    float defIpc = static_cast<float>(averageDefenderIPCLoss) / static_cast<float>(_ipcFactor);
     
     CombatResult result;
     result.attackerWins = static_cast<float>(attackerWins)/results.size();
@@ -252,14 +273,14 @@ void CombatWidget::startCombat() {
     QList<UnitLite> attackerUnits;
     
     QPair<Unit*, int> p;
-    foreach (p, attackerWidget_->getUnits()) {
+    foreach (p, _attackerWidget->getUnits()) {
         for (int i = 0; i < p.second; ++i)
-            attackerUnits.append(UnitLite(p.first, ipcFactor_));
+            attackerUnits.append(UnitLite(p.first, _ipcFactor));
     }
     QList<UnitLite> defenderUnits;
-    foreach (p, defenderWidget_->getUnits()) {
+    foreach (p, _defenderWidget->getUnits()) {
         for (int i = 0; i < p.second; ++i)
-            defenderUnits.append(UnitLite(p.first, ipcFactor_));
+            defenderUnits.append(UnitLite(p.first, _ipcFactor));
     }
 
     qsrand(QDateTime::currentMSecsSinceEpoch());
@@ -286,9 +307,9 @@ void CombatWidget::startCombat() {
     qDebug("Time elapsed (Result): %d ms", computeTime- combatTime);
 #endif
     
-    attackerWidget_->setResults(&results, combatResult.attackerWins, combatResult.draw, combatResult.attackerWins > combatResult.defenderWins,
+    _attackerWidget->setResults(&results, combatResult.attackerWins, combatResult.draw, combatResult.attackerWins > combatResult.defenderWins,
         combatResult.averageAttackerUnit, attackerUnits.size(), combatResult.averageAttackerIPC);
 
-    defenderWidget_->setResults(&results, combatResult.defenderWins, combatResult.draw, combatResult.defenderWins > combatResult.attackerWins, 
+    _defenderWidget->setResults(&results, combatResult.defenderWins, combatResult.draw, combatResult.defenderWins > combatResult.attackerWins, 
         combatResult.averageDefenderUnit, defenderUnits.size(), combatResult.averageDefenderIPC);
 }

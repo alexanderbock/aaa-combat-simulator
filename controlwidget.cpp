@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "controlwidget.h"
 
 #include <QCheckBox>
@@ -11,35 +34,35 @@
 
 ControlWidget::ControlWidget(QWidget* parent)
     : QWidget(parent)
-    , landBattle_(0)
-    , oneLandUnitMustSurvive_(0)
-    , amphibiousCombat_(0)
-    , oolType_(0)
+    , _landBattle(nullptr)
+    , _oneLandUnitMustSurvive(nullptr)
+    , _amphibiousCombat(nullptr)
+    , _oolType(nullptr)
 {
     QVBoxLayout* layout = new QVBoxLayout(this);
 
-    oneLandUnitMustSurvive_ = new QCheckBox("One attacking land\nunit must live");
-    amphibiousCombat_ = new QCheckBox("Amphibious Combat");
+    _oneLandUnitMustSurvive = new QCheckBox("One attacking land\nunit must live");
+    _amphibiousCombat = new QCheckBox("Amphibious Combat");
 
-    landBattle_ = new QCheckBox("Land Battle");
-    connect(landBattle_, SIGNAL(stateChanged(int)), this, SLOT(landBattleCheckboxChanged(int)));
-    connect(landBattle_, SIGNAL(stateChanged(int)), this, SIGNAL(landBattleCheckboxDidChange()));
-    landBattle_->setChecked(true);
-    layout->addWidget(landBattle_);
+    _landBattle = new QCheckBox("Land Battle");
+    connect(_landBattle, SIGNAL(stateChanged(int)), this, SLOT(landBattleCheckboxChanged(int)));
+    connect(_landBattle, SIGNAL(stateChanged(int)), this, SIGNAL(landBattleCheckboxDidChange()));
+    _landBattle->setChecked(true);
+    layout->addWidget(_landBattle);
     
-    layout->addWidget(amphibiousCombat_);
+    layout->addWidget(_amphibiousCombat);
     
-    layout->addWidget(oneLandUnitMustSurvive_);
+    layout->addWidget(_oneLandUnitMustSurvive);
 
     layout->addStretch(-1);
 
     QLabel* oolTypeLabel = new QLabel("Order of loss");
     layout->addWidget(oolTypeLabel);
-    oolType_ = new QComboBox;
-    oolType_->addItem(OOLVALUE);
-    oolType_->addItem(OOLIPC);
-    oolType_->setToolTip("By Combat Value: First the unit with the lesser attack/defense value is chosen. Default in TripleA\nBy IPC: First the cheaper unit is taken as casualty");
-    layout->addWidget(oolType_);
+    _oolType = new QComboBox;
+    _oolType->addItem(OOLVALUE);
+    _oolType->addItem(OOLIPC);
+    _oolType->setToolTip("By Combat Value: First the unit with the lesser attack/defense value is chosen. Default in TripleA\nBy IPC: First the cheaper unit is taken as casualty");
+    layout->addWidget(_oolType);
 
     layout->addStretch(-1);
 
@@ -58,19 +81,19 @@ ControlWidget::ControlWidget(QWidget* parent)
 }
 
 bool ControlWidget::isLandBattle() const {
-    return landBattle_->isChecked();
+    return _landBattle->isChecked();
 }
 
 bool ControlWidget::isAmphibiousCombat() const {
-    return amphibiousCombat_->isChecked();
+    return _amphibiousCombat->isChecked();
 }
 
 bool ControlWidget::landUnitMustLive() const {
-    return oneLandUnitMustSurvive_->isChecked();
+    return _oneLandUnitMustSurvive->isChecked();
 }
 
 OrderOfLoss ControlWidget::orderOfLoss() const {
-    const QString& oolString = oolType_->currentText();
+    const QString& oolString = _oolType->currentText();
     if (oolString == OOLIPC)
         return OrderOfLossIPC;
     else /*if (oolString == OOLVALUE)*/
@@ -79,17 +102,17 @@ OrderOfLoss ControlWidget::orderOfLoss() const {
 
 void ControlWidget::landBattleCheckboxChanged(int state) {
     if (state == 0) { // not Land Battle
-        oneLandUnitMustSurvive_->setDisabled(true);
-        amphibiousCombat_->setDisabled(true);
-        oneLandUnitOldValue_ = oneLandUnitMustSurvive_->isChecked();
-        amphibiousOldValue_ = amphibiousCombat_->isChecked();
-        oneLandUnitMustSurvive_->setChecked(false);
-        amphibiousCombat_->setChecked(false);
+        _oneLandUnitMustSurvive->setDisabled(true);
+        _amphibiousCombat->setDisabled(true);
+        _oneLandUnitOldValue = _oneLandUnitMustSurvive->isChecked();
+        _amphibiousOldValue = _amphibiousCombat->isChecked();
+        _oneLandUnitMustSurvive->setChecked(false);
+        _amphibiousCombat->setChecked(false);
     }
     else {
-        oneLandUnitMustSurvive_->setDisabled(false);
-        oneLandUnitMustSurvive_->setChecked(oneLandUnitOldValue_);
-        amphibiousCombat_->setDisabled(false);
-        amphibiousCombat_->setChecked(amphibiousOldValue_);
+        _oneLandUnitMustSurvive->setDisabled(false);
+        _oneLandUnitMustSurvive->setChecked(_oneLandUnitOldValue);
+        _amphibiousCombat->setDisabled(false);
+        _amphibiousCombat->setChecked(_amphibiousOldValue);
     }
 }

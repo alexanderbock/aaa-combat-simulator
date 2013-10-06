@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "settingswidget.h"
 #include "simulatorapplication.h"
 
@@ -75,57 +98,57 @@ bool deleteDir(const QString& dirName) {
 }
 
 MapEntry::MapEntry(const QString& mapName)
-    : mapName_(mapName)
-    , nameLabel_(new QLabel)
-    , localVersionLabel_(new QLabel)
-    , remoteVersionLabel_(new QLabel)
-    , actionButton_(new QPushButton)
+    : mapName(mapName)
+    , nameLabel(new QLabel)
+    , localVersionLabel(new QLabel)
+    , remoteVersionLabel(new QLabel)
+    , actionButton(new QPushButton)
 {}
 
 MapEntry::~MapEntry() {
-    delete nameLabel_;
-    delete localVersionLabel_;
-    delete remoteVersionLabel_;
-    delete actionButton_;
+    delete nameLabel;
+    delete localVersionLabel;
+    delete remoteVersionLabel;
+    delete actionButton;
 }
 
 
 SettingsWidget::SettingsWidget()
     : QWidget()
-    , layout_(0)
-    , nameLabel_(0)
-    , localVersionLabel_(0)
-    , remoteVersionLabel_(0)
-    , statusText_(0)
+    , _layout(0)
+    , _nameLabel(0)
+    , _localVersionLabel(0)
+    , _remoteVersionLabel(0)
+    , _statusText(0)
 {
     connect(qApp, SIGNAL(remoteVersionFileArrived()), this, SLOT(createMapEntries()));
 }
 
 void SettingsWidget::buttonClicked() {
     QObject* sender = QObject::sender();
-    foreach (MapEntry* mapEntry, maps_) {
-        if (mapEntry->actionButton_ == sender) {
-            const QString& mapName = mapEntry->mapName_;
+    foreach (MapEntry* mapEntry, _maps) {
+        if (mapEntry->actionButton == sender) {
+            const QString& mapName = mapEntry->mapName;
             if (isMapInstalled(mapName)) {
                 if (needsUpdate(mapName)) {
                     removeMap(mapName);
                     setButtonsEnabled(false);
-                    currentMapDownload_ = mapName;
+                    _currentMapDownload = mapName;
                     downloadMap(mapName);
-                    mapEntry->actionButton_->setText(BUTTONTEXTREMOVE);
+                    mapEntry->actionButton->setText(BUTTONTEXTREMOVE);
                 }
                 else {
                     removeMap(mapName);
                     emit finishedRemovingMap(mapName);
-                    mapEntry->actionButton_->setText(BUTTONTEXTDOWNLOAD);
+                    mapEntry->actionButton->setText(BUTTONTEXTDOWNLOAD);
                 }
             }
             else {
                 removeMap(mapName);
                 setButtonsEnabled(false);
-                currentMapDownload_ = mapName;
+                _currentMapDownload = mapName;
                 downloadMap(mapName);
-                mapEntry->actionButton_->setText(BUTTONTEXTREMOVE);
+                mapEntry->actionButton->setText(BUTTONTEXTREMOVE);
             }
             break;
         }
@@ -151,42 +174,42 @@ void SettingsWidget::removeMap(const QString& map) {
     deleteDir(mapsDir.absolutePath() + "/" + map);
     mapsDir.remove(map);
 
-    foreach (const MapEntry* entry, maps_) {
-        if (entry->mapName_ == map)
-            entry->localVersionLabel_->setText("");
+    foreach (const MapEntry* entry, _maps) {
+        if (entry->mapName == map)
+            entry->localVersionLabel->setText("");
     }
 }
 
 void SettingsWidget::setupMapEntry(const MapEntry* mapEntry, QSettings* remote) {
     remote->beginGroup("Maps");
-    QString mapName = mapEntry->mapName_;
-    mapEntry->nameLabel_->setText(mapName);
+    QString mapName = mapEntry->mapName;
+    mapEntry->nameLabel->setText(mapName);
     QString localVersionString = qApp->getLocalMapVersion(mapName);
-    mapEntry->localVersionLabel_->setText(localVersionString);
+    mapEntry->localVersionLabel->setText(localVersionString);
     const QString& remoteVersionString = remote->value(mapName).toString();
-    mapEntry->remoteVersionLabel_->setText(remoteVersionString);
+    mapEntry->remoteVersionLabel->setText(remoteVersionString);
     if (isMapInstalled(mapName)) {
         float localVersionFloat = localVersionString.toFloat();
         float remoteVersionFloat = remote->value(mapName).toFloat();
         if (localVersionFloat < remoteVersionFloat) {
-            mapEntry->actionButton_->setText(BUTTONTEXTUPDATE);
+            mapEntry->actionButton->setText(BUTTONTEXTUPDATE);
         }
         else {
-            mapEntry->actionButton_->setText(BUTTONTEXTREMOVE);
+            mapEntry->actionButton->setText(BUTTONTEXTREMOVE);
         }
 
     }
     else {
-        mapEntry->actionButton_->setText(BUTTONTEXTDOWNLOAD);
+        mapEntry->actionButton->setText(BUTTONTEXTDOWNLOAD);
     }
 
-    connect(mapEntry->actionButton_, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+    connect(mapEntry->actionButton, SIGNAL(clicked()), this, SLOT(buttonClicked()));
     remote->endGroup();
 }
 
 void SettingsWidget::downloadMap(const QString& map) {
     QDir mapsDir = qApp->getMapsDirectory();
-    downloadFile(manager_, qApp->getRemoteMapIndexUrl(map), qApp->getTemporaryIndexFileString());
+    downloadFile(_manager, qApp->getRemoteMapIndexUrl(map), qApp->getTemporaryIndexFileString());
 
     QDomDocument doc("document");
     QFile file(qApp->getTemporaryIndexFileString());
@@ -220,14 +243,14 @@ void SettingsWidget::downloadMap(const QString& map) {
             const QString& fileName = fileElem.nodeName();
             const QString& target = mapsDir.absolutePath() + "/" + fileName + ".png";
             const QString& targetUrl = qApp->getBaseUrlString() + map + "/" + factionName + "/" + fileName + ".png";
-            QNetworkReply* reply = manager_.get(QNetworkRequest(QUrl(targetUrl)));
-            replyFileNameMap_.insert(reply, target);
+            QNetworkReply* reply = _manager.get(QNetworkRequest(QUrl(targetUrl)));
+            _replyFileNameMap.insert(reply, target);
             connect(reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
         }
         mapsDir.cdUp();
     }
-    QNetworkReply* reply = manager_.get(QNetworkRequest(QUrl(qApp->getBaseUrlString() + map + "/" + map + ".xml")));
-    replyFileNameMap_.insert(reply, mapsDir.absolutePath() + "/" + map + ".xml");
+    QNetworkReply* reply = _manager.get(QNetworkRequest(QUrl(qApp->getBaseUrlString() + map + "/" + map + ".xml")));
+    _replyFileNameMap.insert(reply, mapsDir.absolutePath() + "/" + map + ".xml");
     connect(reply, SIGNAL(finished()), this, SLOT(downloadFinished()));
 
     QSettings* remote = qApp->getRemoteSettings();
@@ -241,48 +264,48 @@ void SettingsWidget::downloadMap(const QString& map) {
 void SettingsWidget::downloadFinished() {
     QNetworkReply* reply = dynamic_cast<QNetworkReply*>(QObject::sender());
 
-    const QString& filename = replyFileNameMap_.take(reply);
+    const QString& filename = _replyFileNameMap.take(reply);
 
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
     file.write(reply->readAll());
     file.close();
 
-    statusText_->append("Downloaded " + filename);
+    _statusText->append("Downloaded " + filename);
 
-    if (replyFileNameMap_.keys().isEmpty()) {
+    if (_replyFileNameMap.keys().isEmpty()) {
         createMapEntries();
-        emit finishedDownloadingMap(currentMapDownload_);
+        emit finishedDownloadingMap(_currentMapDownload);
          setButtonsEnabled(true);
     }
 }
 
 void SettingsWidget::createMapEntries() {
-    foreach (const MapEntry* mapEntry, maps_)
+    foreach (const MapEntry* mapEntry, _maps)
         delete mapEntry;
-    maps_.clear();
+    _maps.clear();
 
     QSettings* remoteSettings = qApp->getRemoteSettings();
 
     remoteSettings->beginGroup("Maps");
     QStringList allMaps = remoteSettings->allKeys();
 
-    if (!layout_)
-        layout_ = new QGridLayout(this);
+    if (!_layout)
+        _layout = new QGridLayout(this);
 
-    if (!nameLabel_) {
-        nameLabel_ = new QLabel("Name");
-        layout_->addWidget(nameLabel_, 0, 0);
+    if (!_nameLabel) {
+        _nameLabel = new QLabel("Name");
+        _layout->addWidget(_nameLabel, 0, 0);
     }
 
-    if (!localVersionLabel_) {
-        localVersionLabel_ = new QLabel("Local Version");
-        layout_->addWidget(localVersionLabel_, 0, 1);
+    if (!_localVersionLabel) {
+        _localVersionLabel = new QLabel("Local Version");
+        _layout->addWidget(_localVersionLabel, 0, 1);
     }
 
-    if (!remoteVersionLabel_) {
-        remoteVersionLabel_ = new QLabel("Remote Version");
-        layout_->addWidget(remoteVersionLabel_, 0, 2);
+    if (!_remoteVersionLabel) {
+        _remoteVersionLabel = new QLabel("Remote Version");
+        _layout->addWidget(_remoteVersionLabel, 0, 2);
     }
 
     int i = 0;
@@ -291,24 +314,24 @@ void SettingsWidget::createMapEntries() {
         const QString& map = allMaps[i];
         MapEntry* mapEntry = new MapEntry(map);
         setupMapEntry(mapEntry, remoteSettings);
-        maps_.append(mapEntry);
-        layout_->addWidget(mapEntry->nameLabel_, i+1, 0);
-        layout_->addWidget(mapEntry->localVersionLabel_, i+1, 1);
-        layout_->addWidget(mapEntry->remoteVersionLabel_, i+1, 2);
-        layout_->addWidget(mapEntry->actionButton_, i+1, 3);
+        _maps.append(mapEntry);
+        _layout->addWidget(mapEntry->nameLabel, i+1, 0);
+        _layout->addWidget(mapEntry->localVersionLabel, i+1, 1);
+        _layout->addWidget(mapEntry->remoteVersionLabel, i+1, 2);
+        _layout->addWidget(mapEntry->actionButton, i+1, 3);
     }
 
 
-    if (!statusText_) {
-        statusText_ = new QTextEdit;
-        statusText_->setReadOnly(true);
-        layout_->addWidget(statusText_, i+1, 0, 3, 0);
-        layout_->setRowStretch(i+1, 1);
+    if (!_statusText) {
+        _statusText = new QTextEdit;
+        _statusText->setReadOnly(true);
+        _layout->addWidget(_statusText, i+1, 0, 3, 0);
+        _layout->setRowStretch(i+1, 1);
     }
 }
 
 void SettingsWidget::setButtonsEnabled(bool enabled) {
-    foreach (MapEntry* map, maps_) {
-        map->actionButton_->setEnabled(enabled);
+    foreach (MapEntry* map, _maps) {
+        map->actionButton->setEnabled(enabled);
     }
 }

@@ -1,3 +1,26 @@
+/**************************************************************************************************
+ *                                                                                                *
+ * AAA Combat Simulator                                                                           *
+ *                                                                                                *
+ * Copyright (c) 2011 Alexander Bock                                                              *
+ *                                                                                                *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software  *
+ * and associated documentation files (the "Software"), to deal in the Software without           *
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,     *
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the  *
+ * Software is furnished to do so, subject to the following conditions:                           *
+ *                                                                                                *
+ * The above copyright notice and this permission notice shall be included in all copies or       *
+ * substantial portions of the Software.                                                          *
+ *                                                                                                *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING  *
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND     *
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, *
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        *
+ *                                                                                                *
+ *************************************************************************************************/
+
 #include "simulatorapplication.h"
 
 #include "combatwidget.h"
@@ -12,24 +35,20 @@
 
 SimulatorApplication::SimulatorApplication(int& argc, char** argv)
     : QApplication(argc, argv)
-    , networkManager_(0)
-    , localSettings_(0)
-    , remoteSettings_(0)
-    , versionDownloadErrorOccurred_(false)
-    , mainWidget_(0)
+    , _networkManager(new QNetworkAccessManager)
+    , _localSettings(new QSettings)
+    , _remoteSettings(nullptr)
+    , _versionDownloadErrorOccurred(false)
+    , _mainWidget(new QTabWidget)
 {
     // Set general application information
     setApplicationName("AAACombatSimulator");
     setApplicationVersion("1.0");
-    setOrganizationDomain("webstaff.itn.liu.se/~alebo68");
+    setOrganizationDomain("alexbock.dyndns.org");
     setOrganizationName("Bock");
 
-    // initializing member items
-    networkManager_ = new QNetworkAccessManager;
-    localSettings_ = new QSettings;
-
     // start the download of the remote version file
-    QNetworkReply* reply = networkManager_->get(QNetworkRequest(getRemoteVersionFileUrl()));
+    QNetworkReply* reply = _networkManager->get(QNetworkRequest(getRemoteVersionFileUrl()));
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(remoteVersionDownloadFinished()));
     QObject::connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(remoteVersionDownloadFailed(QNetworkReply::NetworkError)));
 
@@ -39,8 +58,7 @@ SimulatorApplication::SimulatorApplication(int& argc, char** argv)
     QDir::setCurrent(dir.absolutePath());
 
     // create the widgets for the application
-    mainWidget_ = new QTabWidget;
-    mainWidget_->setMinimumSize(800, 640);
+    _mainWidget->setMinimumSize(800, 640);
     foreach (const QString& dir, getListOfLocalMaps()) {
         const QDir& mapsDir = getMapsDirectory(dir);
         if (mapsDir.exists() && mapsDir.exists(dir + ".xml")) {
@@ -50,79 +68,79 @@ SimulatorApplication::SimulatorApplication(int& argc, char** argv)
     SettingsWidget* mapsWidget = new SettingsWidget;
     connect(mapsWidget, SIGNAL(finishedDownloadingMap(QString)), this, SLOT(addTab(QString)));
     connect(mapsWidget, SIGNAL(finishedRemovingMap(QString)), this, SLOT(removeTab(QString)));
-    mainWidget_->addTab(mapsWidget, "Settings");
+    _mainWidget->addTab(mapsWidget, "Settings");
 
     // lastly, select the previously selected tab and show the main widget 
     restoreState();
-    mainWidget_->show();
+    _mainWidget->show();
 }
 
 SimulatorApplication::~SimulatorApplication() {
     saveState();
-    delete networkManager_;
-    delete localSettings_;
-    delete remoteSettings_;
-    delete mainWidget_;
+    delete _networkManager;
+    delete _localSettings;
+    delete _remoteSettings;
+    delete _mainWidget;
 }
 
 void SimulatorApplication::addTab(QString name) {
     CombatWidget* widget = new CombatWidget(name);
     // if no tab exists yet, just add it
-    if (mainWidget_->count() == 0) {
-        mainWidget_->addTab(widget, name);
+    if (_mainWidget->count() == 0) {
+        _mainWidget->addTab(widget, name);
         return;
     }
     // find the correct spot for inserting the tab
-    for (int i = 0; i < mainWidget_->count(); ++i) {
-        CombatWidget* current = dynamic_cast<CombatWidget*>(mainWidget_->widget(i));
+    for (int i = 0; i < _mainWidget->count(); ++i) {
+        CombatWidget* current = dynamic_cast<CombatWidget*>(_mainWidget->widget(i));
         if (!current) {
-            mainWidget_->insertTab(i, widget, name);
+            _mainWidget->insertTab(i, widget, name);
             return; // if the widget is no CombatWidget, we have found the Settings Widget
         }
         const QString& currentName = current->getDirectory();
         if (currentName.compare(name, Qt::CaseInsensitive) > 0) {
-            mainWidget_->insertTab(i, widget, name);
+            _mainWidget->insertTab(i, widget, name);
             return;
         }
     }
 
-    // if we got until here, the tab must be added to the back and not Settings Widget exists yet
-    mainWidget_->addTab(widget, widget->getDirectory());
+    // if we got until here, the tab must be added to the back and no Settings Widget exists yet
+    _mainWidget->addTab(widget, widget->getDirectory());
 }
 
 void SimulatorApplication::removeTab(QString name) {
     int index = -1;
-    for (int i = 0; i < mainWidget_->count(); ++i) {
-        const QString& tabText = mainWidget_->tabText(i);
+    for (int i = 0; i < _mainWidget->count(); ++i) {
+        const QString& tabText = _mainWidget->tabText(i);
         if (name.compare(tabText, Qt::CaseInsensitive) == 0) {
             index = i;
             break;
         }
     }
     if (index != -1)
-        mainWidget_->removeTab(index);
+        _mainWidget->removeTab(index);
 }
 
 void SimulatorApplication::restoreState() {
     // select the old tab
-    QString oldTabName = localSettings_->value("oldTab").toString();
-    for (int i = 0; i < mainWidget_->count(); ++i) {
-        const QString& tabText = mainWidget_->tabText(i);
+    QString oldTabName = _localSettings->value("oldTab").toString();
+    for (int i = 0; i < _mainWidget->count(); ++i) {
+        const QString& tabText = _mainWidget->tabText(i);
         if (oldTabName.compare(tabText, Qt::CaseInsensitive) == 0) {
-            mainWidget_->setCurrentIndex(i);
+            _mainWidget->setCurrentIndex(i);
             break;
         }
     }
 }
 
 void SimulatorApplication::saveState() {
-    int currentIndex = mainWidget_->currentIndex();
-    QString tabText = mainWidget_->tabText(currentIndex);
-    localSettings_->setValue("oldTab", tabText);
+    int currentIndex = _mainWidget->currentIndex();
+    QString tabText = _mainWidget->tabText(currentIndex);
+    _localSettings->setValue("oldTab", tabText);
 }
 
 void SimulatorApplication::remoteVersionDownloadFinished() {
-    if (!versionDownloadErrorOccurred_) {
+    if (!_versionDownloadErrorOccurred) {
         QNetworkReply* currentReply = dynamic_cast<QNetworkReply*>(QObject::sender());
         QFile file(getTemporaryVersionFileString());
         file.open(QIODevice::WriteOnly);
@@ -131,22 +149,22 @@ void SimulatorApplication::remoteVersionDownloadFinished() {
 
         currentReply->deleteLater();
 
-        remoteSettings_ = new QSettings(getTemporaryVersionFileString(), QSettings::IniFormat);
+        _remoteSettings = new QSettings(getTemporaryVersionFileString(), QSettings::IniFormat);
         checkApplicationAndMapVersions();
         emit remoteVersionFileArrived();
     }
 }
 
 void SimulatorApplication::remoteVersionDownloadFailed(QNetworkReply::NetworkError) {
-    versionDownloadErrorOccurred_ = true;
+    _versionDownloadErrorOccurred = true;
 }
 
 void SimulatorApplication::checkApplicationAndMapVersions() const {
     // check general app version
-    int result = compareVersions(remoteSettings_->value("Version").toString(), applicationVersion());
+    int result = compareVersions(_remoteSettings->value("Version").toString(), applicationVersion());
     bool newAppVersion = result > 0;
 
-    remoteSettings_->beginGroup("Maps");
+    _remoteSettings->beginGroup("Maps");
     QList<MapVersionInformation> newMapList;
     QDir mapsDir = getMapsDirectory();
     QStringList dirs = mapsDir.entryList();
@@ -154,31 +172,31 @@ void SimulatorApplication::checkApplicationAndMapVersions() const {
         QDir dir(getMapsDirectory(dirName));
         if (dir.exists("VERSION")) {
             QString localVersion = getLocalMapVersion(dirName);
-            QString remoteVersion = remoteSettings_->value(dirName).toString();
+            QString remoteVersion = _remoteSettings->value(dirName).toString();
             result = compareVersions(remoteVersion, localVersion);
             if (result > 0) {
                 MapVersionInformation info;
-                info.name_ = dirName;
-                info.localVersion_ = localVersion;
-                info.remoteVersion_ = remoteVersion;
+                info.name = dirName;
+                info.localVersion = localVersion;
+                info.remoteVersion = remoteVersion;
                 newMapList.append(info);
             }
         }
     }
-    remoteSettings_->endGroup();
+    _remoteSettings->endGroup();
 
     if (newAppVersion || !newMapList.isEmpty()) {
         QString text;
         if (newAppVersion)
             text = "<h3>New application version</h3><p>Current version: " + applicationVersion() + "<br>New version: " +
-            remoteSettings_->value("Version").toString() +"</p><p><a href=\"" + getDownloadUrlString() + "\">Download</a><br>\
+            _remoteSettings->value("Version").toString() +"</p><p><a href=\"" + getDownloadUrlString() + "\">Download</a><br>\
                                             <a href=\"" + getChangelogUrlString() + "\">Changelog</a></p>";
 
         if (!newMapList.isEmpty()) {
             text += "<h3>New map versions available</h3>";
 
             foreach (const MapVersionInformation& info, newMapList)
-                text += "<p><b>" + info.name_ + "</b></p>";
+                text += "<p><b>" + info.name + "</b></p>";
         }
         QMessageBox msgBox(QMessageBox::Information, "New version available", text);
         msgBox.setTextFormat(Qt::RichText);
@@ -187,15 +205,15 @@ void SimulatorApplication::checkApplicationAndMapVersions() const {
 }
 
 QSettings* SimulatorApplication::getLocalSettings() const {
-    return localSettings_;
+    return _localSettings;
 }
 
 QSettings* SimulatorApplication::getRemoteSettings() const {
-    return remoteSettings_;
+    return _remoteSettings;
 }
 
 QNetworkAccessManager* SimulatorApplication::getNetworkAccessManager() const {
-    return networkManager_;
+    return _networkManager;
 }
 
 void SimulatorApplication::separateVersion(QString versionString,
