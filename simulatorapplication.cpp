@@ -226,6 +226,10 @@ void SimulatorApplication::separateVersion(QString versionString,
 
     QStringList versions = versionString.split(".");
 
+    major = versions.size() > 0 ? versions[0] : "0";
+    minor = versions.size() > 1 ? versions[1] : "0";
+    release = versions.size() > 2 ? versions[2] : "0";
+
     if (versions.size() > 0) {
         major = versions[0];
 
